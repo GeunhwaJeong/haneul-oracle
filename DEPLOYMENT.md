@@ -93,8 +93,10 @@ node src/relayer.mjs --once   # subsequent runs update prices
 node src/relayer.mjs          # or run as a daemon (RELAY_INTERVAL_SECS)
 ```
 
-Feeds default to BTC/USD and ETH/USD; override with `FEED_IDS` (comma
-separated hex ids from https://pyth.network/developers/price-feed-ids).
+Feeds default to BTC/USD, ETH/USD, and SOL/USD; override with `FEED_IDS`
+(comma separated hex ids from https://pyth.network/developers/price-feed-ids).
+New feeds need no admin action: the next relayer run creates the missing
+PriceInfoObjects, and the run after that updates them.
 
 ## 5. Keep the guardian set in sync
 
@@ -135,9 +137,11 @@ ETH/USD prices verified on chain.
 | pyth State (shared) | `0xef73f1e744217846f23e1b00e73cee113bf7dbb57e88e296c2f7332109315798` |
 | BTC/USD PriceInfoObject | `0x81fc386b033f1b3c7105a2339f26b7178b21c9cc55473cd2ffd9d5fd8fc5fb43` |
 | ETH/USD PriceInfoObject | `0xb8adb8be6bbda97f75047eae25011e3dff217c94af1c1498991eec7d40ffb856` |
+| SOL/USD PriceInfoObject | `0x8eb6fbffed0434fb7122e1de357496e9c66d7a34f0ab7dc7a013031af4d9c80a` |
 
 Feed ids: BTC/USD `e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43`,
-ETH/USD `ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace`.
+ETH/USD `ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace`,
+SOL/USD `ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d`.
 
 The AdminCap and UpgradeCap of each package are held by the deployer.
 Measured costs: publish 0.222 + 0.235 HANEUL, one update of both feeds

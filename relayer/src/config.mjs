@@ -15,11 +15,12 @@ export const WORMHOLESCAN_URL =
 export const PYTH_STATE_ID = process.env.PYTH_STATE_ID;
 export const WORMHOLE_STATE_ID = process.env.WORMHOLE_STATE_ID;
 
-// Price feed ids to relay (hex, no 0x). Defaults: BTC/USD, ETH/USD.
+// Price feed ids to relay (hex, no 0x). Defaults: BTC/USD, ETH/USD, SOL/USD.
 export const FEED_IDS = (
   process.env.FEED_IDS ??
   "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43," +
-    "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
+    "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace," +
+    "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d"
 )
   .split(",")
   .map((s) => s.trim().replace(/^0x/i, ""))
