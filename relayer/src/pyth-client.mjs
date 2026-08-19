@@ -167,7 +167,7 @@ export class HaneulPythClient {
     if (!this.priceFeedObjectIdCache.has(normalized)) {
       const { id: tableId, fieldType } = await this.getPriceTableInfo();
       const result = await this.provider.getDynamicFieldObject({
-        parentObjectId: tableId,
+        parentId: tableId,
         name: {
           type: `${fieldType}::price_identifier::PriceIdentifier`,
           value: { bytes: [...Buffer.from(normalized, "hex")] },
@@ -188,7 +188,7 @@ export class HaneulPythClient {
   async getPriceTableInfo() {
     if (this.priceTableInfo === undefined) {
       const result = await this.provider.getDynamicFieldObject({
-        parentObjectId: this.pythStateId,
+        parentId: this.pythStateId,
         name: { type: "vector<u8>", value: "price_info" },
       });
       if (!result.data?.type) {
