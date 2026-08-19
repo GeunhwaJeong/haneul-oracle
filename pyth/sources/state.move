@@ -14,6 +14,7 @@ module pyth::state {
     use wormhole::package_utils::{Self};
     use wormhole::external_address::{ExternalAddress};
 
+    friend pyth::admin;
     friend pyth::pyth;
     #[test_only]
     friend pyth::pyth_tests;

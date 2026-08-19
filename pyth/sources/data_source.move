@@ -7,6 +7,7 @@ module pyth::data_source {
 
     use wormhole::external_address::ExternalAddress;
 
+    friend pyth::admin;
     friend pyth::state;
     friend pyth::set_data_sources;
     friend pyth::pyth;

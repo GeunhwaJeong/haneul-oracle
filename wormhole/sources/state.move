@@ -25,6 +25,7 @@ module wormhole::state {
     use wormhole::package_utils::{Self};
     use wormhole::version_control::{Self};
 
+    friend wormhole::admin;
     friend wormhole::emitter;
     friend wormhole::governance_message;
     friend wormhole::migrate;
