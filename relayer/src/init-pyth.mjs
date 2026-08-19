@@ -97,7 +97,14 @@ async function main() {
     signer: keypair(),
     options: { showEffects: true, showObjectChanges: true },
   });
-  console.log(`digest: ${result.digest} (${result.effects?.status?.status})`);
+  const status = result.effects?.status?.status;
+  console.log(`digest: ${result.digest} (${status})`);
+  if (status !== "success") {
+    console.error(
+      `init failed on chain: ${result.effects?.status?.error ?? status}`,
+    );
+    process.exit(1);
+  }
   const shared = (result.objectChanges ?? []).find(
     (c) => c.type === "created" && c.objectType?.endsWith("::state::State"),
   );

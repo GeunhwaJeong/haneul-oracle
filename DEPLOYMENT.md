@@ -72,7 +72,9 @@ node src/init-wormhole.mjs \
 ## 3. Initialize pyth
 
 Stable Pyth configuration: 60s stale threshold, update fee 1, the three
-Pythnet data sources, Pyth governance data source.
+Pythnet data sources. The governance data source is set to an unmatchable
+value (emitter chain 0, zero address), so the AdminCap is the sole
+authority; see the note in `src/init-pyth.mjs`.
 
 ```sh
 node src/init-pyth.mjs \
