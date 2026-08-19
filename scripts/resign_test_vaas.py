@@ -98,7 +98,6 @@ def try_rewrite_vaa(hexstr: str) -> str | None:
         new_sig = PrivateKey(DEVNET_GUARDIAN_SECRET).sign_recoverable(digest, hasher=None)
         sigs.append(bytes([guardian_index]) + new_sig)
 
-    out = raw[:6] if nsig else raw[:6]
     out = raw[0:1] + gsi + bytes([nsig]) + b"".join(sigs) + new_body
     # Sanity: re-recover from the fresh signature.
     for i in range(nsig):

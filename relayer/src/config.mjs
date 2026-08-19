@@ -22,13 +22,27 @@ export const FEED_IDS = (
     "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
 )
   .split(",")
-  .map((s) => s.trim())
+  .map((s) => s.trim().replace(/^0x/i, ""))
   .filter(Boolean);
 
-// How often the relayer pushes fresh prices, in seconds.
-export const RELAY_INTERVAL_SECS = Number(
-  process.env.RELAY_INTERVAL_SECS ?? 300,
-);
+// Reject malformed feed ids at startup. Hermes rejects the whole batch request
+// if any id is invalid, so one bad entry would silently halt every feed.
+for (const id of FEED_IDS) {
+  if (!/^[0-9a-fA-F]{64}$/.test(id)) {
+    throw new Error(`invalid feed id (want 64 hex chars): ${id}`);
+  }
+}
+if (FEED_IDS.length === 0) throw new Error("FEED_IDS is empty");
+
+// How often the relayer pushes fresh prices, in seconds. Guard against NaN,
+// which would make setTimeout fire immediately and hot-loop the daemon.
+export const RELAY_INTERVAL_SECS = (() => {
+  const n = Number(process.env.RELAY_INTERVAL_SECS ?? 300);
+  if (!Number.isFinite(n) || n <= 0) {
+    throw new Error(`invalid RELAY_INTERVAL_SECS: ${process.env.RELAY_INTERVAL_SECS}`);
+  }
+  return n;
+})();
 
 export function client() {
   return new HaneulJsonRpcClient({ url: RPC_URL, network: "unknown" });

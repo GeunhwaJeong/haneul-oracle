@@ -31,9 +31,23 @@ export class HaneulPythClient {
       if (!result.data?.content || result.data.content.dataType !== "moveObject") {
         throw new Error("unable to fetch pyth state object");
       }
-      this.baseUpdateFee = Number(result.data.content.fields.base_update_fee);
+      // Kept as the raw string the RPC returns and handed straight to
+      // tx.pure.u64; Number() would lose precision on large u64 values.
+      this.baseUpdateFee = String(result.data.content.fields.base_update_fee);
     }
     return this.baseUpdateFee;
+  }
+
+  // Drop every cached value that a config change or package upgrade can
+  // invalidate. A long-lived daemon must call this after a failed submission,
+  // otherwise a stale fee (admin raised it) or stale package id (upgrade +
+  // migrate) makes every subsequent transaction abort forever.
+  invalidateCaches() {
+    this.baseUpdateFee = undefined;
+    this.pythPackageId = undefined;
+    this.wormholePackageId = undefined;
+    this.priceTableInfo = undefined;
+    this.priceFeedObjectIdCache.clear();
   }
 
   // Latest package id an object belongs to, following upgrades via the

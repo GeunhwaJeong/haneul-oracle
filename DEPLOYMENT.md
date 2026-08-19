@@ -33,10 +33,23 @@ haneul client test-publish --build-env mainnet \
   --publish-unpublished-deps --pubfile-path Pub.local.toml
 ```
 
-Mainnet: publish `wormhole/` first, then `pyth/` (its `Move.toml` depends on
-`../wormhole` whose `Published.toml` records the address). Alternatively
-build with `haneul move build --dump-bytecode-as-base64` and publish the
-JSON with `node src/publish.mjs --bytecode <json>`.
+Mainnet / SDK publish flow (avoids touching the operator's default client
+config): publish `wormhole/` first via `node src/publish.mjs`, then write
+`wormhole/Published.toml` with the resulting address so `pyth`'s local
+dependency resolves, then build and publish `pyth/`:
+
+```sh
+# after publishing wormhole, record its address:
+cat > wormhole/Published.toml <<EOF
+[published.mainnet]
+chain-id = "<chain id>"
+published-at = "<wormhole package id>"
+original-id = "<wormhole package id>"
+version = 1
+EOF
+cd pyth && haneul move build --dump-bytecode-as-base64 --build-env mainnet > pyth.json
+node ../relayer/src/publish.mjs --bytecode pyth.json
+```
 
 Publishing transfers to the sender, per package: `UpgradeCap`,
 `setup::DeployerCap` (consumed by init), and `admin::AdminCap` (keep safe;

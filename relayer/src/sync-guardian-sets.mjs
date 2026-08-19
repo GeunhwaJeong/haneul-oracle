@@ -19,16 +19,30 @@ import { HANEUL_CLOCK_OBJECT_ID } from "@haneullabs/haneul/utils";
 import { WORMHOLESCAN_URL, WORMHOLE_STATE_ID, client, keypair } from "./config.mjs";
 import { fetchCurrentGuardianSet } from "./init-wormhole.mjs";
 
-const CHECK_INTERVAL_SECS = Number(process.env.SYNC_INTERVAL_SECS ?? 6 * 3600);
+const CHECK_INTERVAL_SECS = intervalSecs(process.env.SYNC_INTERVAL_SECS, 6 * 3600);
 const GOVERNANCE_EMITTER =
   "0000000000000000000000000000000000000000000000000000000000000004";
 const once = process.argv.includes("--once");
+
+function intervalSecs(raw, fallback) {
+  if (raw === undefined) return fallback;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) {
+    console.error(`invalid interval "${raw}", using ${fallback}s`);
+    return fallback;
+  }
+  return n;
+}
 
 if (!WORMHOLE_STATE_ID) {
   console.error("WORMHOLE_STATE_ID must be set");
   process.exit(1);
 }
 
+// Validate the signing key at startup rather than only when a rotation finally
+// needs it: the key matters exactly once, at the emergency, and a months-late
+// "key not set" is the worst time to discover a typo.
+const signer = keypair();
 const provider = client();
 
 async function getOnChainState() {
@@ -110,11 +124,22 @@ async function submitUpgrade(packageId, vaa) {
       tx.object(HANEUL_CLOCK_OBJECT_ID),
     ],
   });
-  return provider.signAndExecuteTransaction({
+  const result = await provider.signAndExecuteTransaction({
     transaction: tx,
-    signer: keypair(),
+    signer,
     options: { showEffects: true },
   });
+  const status = result.effects?.status?.status;
+  if (status !== "success") {
+    throw new Error(
+      `guardian set upgrade failed on chain: ` +
+        `${result.effects?.status?.error ?? status} (${result.digest})`,
+    );
+  }
+  // Wait for the effects to settle before the next catch-up submission so its
+  // gas coin selection does not race this transaction on the fullnode.
+  await provider.waitForTransaction({ digest: result.digest });
+  return result;
 }
 
 async function syncOnce() {
@@ -135,19 +160,20 @@ async function syncOnce() {
       return;
     }
     const result = await submitUpgrade(packageId, vaa);
-    console.log(
-      `submitted guardian set ${next}: ${result.digest} ` +
-        `(${result.effects?.status?.status})`,
-    );
+    console.log(`submitted guardian set ${next}: ${result.digest}`);
   }
 }
 
+let lastError;
 for (;;) {
   try {
     await syncOnce();
+    lastError = undefined;
   } catch (err) {
+    lastError = err;
     console.error("sync error:", err.message ?? err);
   }
   if (once) break;
   await new Promise((r) => setTimeout(r, CHECK_INTERVAL_SECS * 1000));
 }
+if (lastError) process.exit(1);

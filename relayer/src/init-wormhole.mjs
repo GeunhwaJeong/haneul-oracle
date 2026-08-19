@@ -11,6 +11,8 @@
 //     --deployer-cap <DeployerCap object id> \
 //     --upgrade-cap <UpgradeCap object id>
 
+import { pathToFileURL } from "node:url";
+
 import { bcs } from "@haneullabs/haneul/bcs";
 import { Transaction } from "@haneullabs/haneul/transactions";
 
@@ -91,6 +93,9 @@ async function main() {
   if (shared) console.log(`wormhole State: ${shared.objectId}`);
 }
 
-if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split("/").pop())) {
+// Run main() only when invoked directly, not when imported for
+// fetchCurrentGuardianSet. Compare resolved paths rather than a basename
+// suffix, which would misfire for any script whose name ends in this one.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   await main();
 }

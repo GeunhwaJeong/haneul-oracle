@@ -19,9 +19,17 @@ import { client, keypair } from "./config.mjs";
 const STALE_PRICE_THRESHOLD_SECS = 60;
 const BASE_UPDATE_FEE = 1;
 
+// Governance data source is deliberately set to an unmatchable value (emitter
+// chain 0, zero address) instead of Pyth's real governance emitter. This
+// deployment's authority is the AdminCap, not Pyth governance. Wormhole VAAs
+// always carry a real emitter chain (>= 1), so no VAA can ever satisfy
+// pyth::governance::verify_vaa, which fully closes the upstream VAA governance
+// path (it would otherwise let Pyth global governance, target chain 0, mutate
+// this deployment's config). If Pyth governance is ever wanted, the admin can
+// point it at the real source with pyth::admin::set_governance_data_source.
 const GOVERNANCE_DATA_SOURCE = {
-  chain: 1,
-  emitter: "5635979a221c34931e32620b9293a463065555ea71fe97cd6237ade875b12e9e",
+  chain: 0,
+  emitter: "0000000000000000000000000000000000000000000000000000000000000000",
 };
 
 // Pythnet price attestation emitters accepted as data sources.
