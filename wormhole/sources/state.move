@@ -42,7 +42,11 @@ module wormhole::state {
     const E_INVALID_BUILD_DIGEST: u64 = 1;
 
     /// Haneul's chain ID is hard-coded to one value.
-    const CHAIN_ID: u16 = 21;
+    ///
+    /// 8282 matches Haneul's registered coin type and is unused in the
+    /// Wormhole chain registry. Keeping the inherited value would make
+    /// governance VAAs targeting that chain verify as local here.
+    const CHAIN_ID: u16 = 8282;
 
     /// Capability reflecting that the current build version is used to invoke
     /// state methods.
