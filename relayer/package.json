@@ -1,0 +1,17 @@
+{
+  "name": "haneul-oracle-relayer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Daemons and tooling for the Haneul Pyth deployment: price relayer, guardian set synchronizer, and chain initialization",
+  "license": "Apache-2.0",
+  "scripts": {
+    "relayer": "node src/relayer.mjs",
+    "sync-guardians": "node src/sync-guardian-sets.mjs",
+    "init-wormhole": "node src/init-wormhole.mjs",
+    "init-pyth": "node src/init-pyth.mjs"
+  },
+  "dependencies": {
+    "@haneullabs/haneul": "^2.20.3"
+  }
+}
