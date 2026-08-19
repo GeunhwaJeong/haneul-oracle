@@ -28,6 +28,14 @@ DEVNET_GUARDIAN_SECRET = bytes.fromhex(
 )
 DEVNET_GUARDIAN_ADDRESS = bytes.fromhex("befa429d57cd18b7f8a4d91a2da9ab4af05d0fbe")
 
+# Guardians allowed to appear as the original fixture signer. Pyth's own test
+# guardian has no published secret, so those fixtures are re-signed with the
+# devnet key and the test setup is switched to the devnet guardian address.
+KNOWN_ORIGINAL_SIGNERS = {
+    DEVNET_GUARDIAN_ADDRESS,
+    bytes.fromhex("13947bd48b18e53fdaeee77f3473391ac727c638"),
+}
+
 OLD_CHAIN = 21
 NEW_CHAIN = 8282
 
@@ -52,18 +60,26 @@ def try_rewrite_vaa(hexstr: str) -> str | None:
     gsi = raw[1:5]
     nsig = raw[5]
     body_off = 6 + 66 * nsig
-    if len(raw) < body_off + 51 + 35:
+    if len(raw) < body_off + 51 + 8:
         return None
     body = raw[body_off:]
     payload = body[51:]
-    # Core-module governance: 28 zero bytes + "Core", then action, then chain.
-    if payload[:28] != b"\x00" * 28 or payload[28:32] != b"Core":
+    # Two governance payload layouts carry a target chain:
+    # - Wormhole Core: 32-byte module name ending in "Core", action u8, chain u16
+    # - Pyth ("PTGM" magic): magic 4B, module u8, action u8, chain u16
+    if len(payload) >= 35 and payload[:28] == b"\x00" * 28 and payload[28:32] == b"Core":
+        chain_off = 33
+    elif payload[:4] == b"PTGM":
+        chain_off = 6
+    else:
         return None
-    chain = int.from_bytes(payload[33:35], "big")
+    chain = int.from_bytes(payload[chain_off : chain_off + 2], "big")
     if chain != OLD_CHAIN:
         return None
 
-    new_payload = payload[:33] + NEW_CHAIN.to_bytes(2, "big") + payload[35:]
+    new_payload = (
+        payload[:chain_off] + NEW_CHAIN.to_bytes(2, "big") + payload[chain_off + 2 :]
+    )
     new_body = body[:51] + new_payload
     digest = kk(kk(new_body))
 
@@ -77,7 +93,7 @@ def try_rewrite_vaa(hexstr: str) -> str | None:
         recovered = eth_address(
             PublicKey.from_signature_and_message(rs + bytes([v]), kk(kk(body)), hasher=None)
         )
-        if recovered != DEVNET_GUARDIAN_ADDRESS:
+        if recovered not in KNOWN_ORIGINAL_SIGNERS:
             raise RuntimeError(f"fixture signed by unknown guardian {recovered.hex()}")
         new_sig = PrivateKey(DEVNET_GUARDIAN_SECRET).sign_recoverable(digest, hasher=None)
         sigs.append(bytes([guardian_index]) + new_sig)
