@@ -121,6 +121,28 @@ The publisher holds one `AdminCap` per package. Examples (any PTB tool):
   `upgrade_contract::commit_upgrade` with the receipt, then a separate
   transaction calling `admin::migrate(cap, state)`.
 
+## Mainnet deployment record (2026-08-20)
+
+Deployed and initialized on Haneul mainnet (chain id `a0053d9e`) following
+the runbook above. Guardian set 7 bootstrapped live; first BTC/USD and
+ETH/USD prices verified on chain.
+
+| Object | ID |
+|---|---|
+| wormhole package | `0xcd66f3331f050a8e9d4dbc81932193c961fa565f99ac7515b3dd6ea34e4fda02` |
+| wormhole State (shared) | `0xdae4d3791fd6ed753bad657bf413527a612d3620283e6b10be3b8471aa8c00da` |
+| pyth package | `0x9998fae7b6fe1e14f893ee341eb7dfffd83bb28f22ad6507c726c0cf4a322187` |
+| pyth State (shared) | `0xef73f1e744217846f23e1b00e73cee113bf7dbb57e88e296c2f7332109315798` |
+| BTC/USD PriceInfoObject | `0x81fc386b033f1b3c7105a2339f26b7178b21c9cc55473cd2ffd9d5fd8fc5fb43` |
+| ETH/USD PriceInfoObject | `0xb8adb8be6bbda97f75047eae25011e3dff217c94af1c1498991eec7d40ffb856` |
+
+Feed ids: BTC/USD `e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43`,
+ETH/USD `ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace`.
+
+The AdminCap and UpgradeCap of each package are held by the deployer.
+Measured costs: publish 0.222 + 0.235 HANEUL, one update of both feeds
+0.013 HANEUL (about 3.7 HANEUL per day at the default 300s interval).
+
 ## Consumer contract checklist
 
 - Read prices only through staleness-checked entry points; reject
